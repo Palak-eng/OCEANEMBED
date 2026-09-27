@@ -283,6 +283,12 @@ def fetch_24h_history(lat: float, lon: float) -> dict:
             "wave_height_m": round(float(wave[i]), 2) if wave[i] is not None else None,
         })
 
+    if not hours:
+        errors["no_data"] = (
+            "No hourly data returned for this point — it may be a land cell. "
+            "Try a nearby ocean coordinate."
+        )
+
     # Latest live SSS / SLA attached to every row on export
     sss_val = sss_ts = sla_val = sla_ts = None
     try:

@@ -106,6 +106,15 @@ function Dashboard() {
   const activeLat = mode === "benchmark" && selectedFloat ? selectedFloat.latitude : point.lat;
   const activeLon = mode === "benchmark" && selectedFloat ? selectedFloat.longitude : point.lon;
 
+  // Keep the "confirm location" picker synced with the live location, so its
+  // value tracks map picks, ARGO float selections and resets instead of
+  // sitting frozen on the initial default.
+  useEffect(() => {
+    setDraft((d) =>
+      d.lat === activeLat && d.lon === activeLon ? d : { lat: activeLat, lon: activeLon },
+    );
+  }, [activeLat, activeLon]);
+
   // 2. Fetch live surface telemetry for Operational Mode
   const live = useQuery({
     queryKey: ["live-surface", activeLat, activeLon],
@@ -261,10 +270,25 @@ function Dashboard() {
     setDownloading24h(true);
     try {
       const hist = await getHistory24h({ data: { lat: activeLat, lon: activeLon } });
+      if (!hist.hours.length) {
+        toast.error(
+          "No hourly data for this point — it may be a land cell. Pick a nearby ocean coordinate.",
+        );
+        return;
+      }
       const header =
         "time_utc,sst_c,sss_psu,sss_observed_at,sla_m,sla_observed_at,ugos_ms,vgos_ms,wind_u_ms,wind_v_ms,wave_height_m";
-      const lines = hist.hours.map((h) =>
-        [
+      const valueKeys = [
+        "sst_c",
+        "ugos_ms",
+        "vgos_ms",
+        "wind_u_ms",
+        "wind_v_ms",
+        "wave_height_m",
+      ] as const;
+      let emptyCells = 0;
+      const lines = hist.hours.map((h) => {
+        const cells = [
           h.time,
           h.sst_c ?? "",
           hist.sss_psu ?? "",
@@ -276,20 +300,29 @@ function Dashboard() {
           h.wind_u_ms ?? "",
           h.wind_v_ms ?? "",
           h.wave_height_m ?? "",
-        ].join(","),
-      );
-      const meta = [
-        `# OceanEmbed 24h live history for ${hist.location.latitude}, ${hist.location.longitude}`,
-        `# sources: ${hist.sources.join(" | ")}`,
-      ].join("\n");
-      const csv = `${meta}\n${header}\n${lines.join("\n")}\n`;
+        ];
+        emptyCells += valueKeys.filter((k) => h[k] == null).length;
+        if (hist.sss_psu == null) emptyCells += 1;
+        if (hist.sla_m == null) emptyCells += 1;
+        return cells.join(",");
+      });
+      // NOTE: no `#` comment lines — they break Excel's column detection and
+      // make full columns look empty. Provenance lives in the filename + toast.
+      const csv = `${header}\n${lines.join("\n")}\n`;
       const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
       const a = document.createElement("a");
       a.href = url;
       a.download = `oceanembed_24h_${activeLat}N_${activeLon}E.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success(`Downloaded 24h live data (${hist.hours.length} hourly records)`);
+      const totalCells = hist.hours.length * (valueKeys.length + 2);
+      if (emptyCells > totalCells * 0.2) {
+        toast.warning(
+          `Downloaded with gaps (${emptyCells} empty cells) — feeds may have been patchy; retry in a few minutes. Sources: Open-Meteo + NOAA NRT.`,
+        );
+      } else {
+        toast.success(`Downloaded 24h live data (${hist.hours.length} hourly records)`);
+      }
     } catch {
       toast.error("Could not fetch 24h history from backend.");
     } finally {
