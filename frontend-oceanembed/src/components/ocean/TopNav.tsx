@@ -8,7 +8,6 @@ import {
   LogOut,
   MapPin,
   Settings,
-  Waves,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -69,9 +68,13 @@ export function TopNav() {
   return (
     <header className="flex flex-wrap items-center gap-4 border-b border-border bg-panel px-5 py-3 backdrop-blur-md">
       <Link to="/" className="flex items-center gap-3">
-        <span className="flex size-10 items-center justify-center rounded-full bg-primary/20 text-accent ring-1 ring-primary/40">
-          <Waves className="size-5" />
-        </span>
+        <img
+          src="/logo.png"
+          alt="OceanEmbed logo"
+          width={40}
+          height={40}
+          className="size-10 rounded-full object-cover ring-1 ring-primary/40"
+        />
         <span className="font-display text-xl font-bold tracking-tight">
           OCEAN<span className="text-accent">EMBED</span>
         </span>
