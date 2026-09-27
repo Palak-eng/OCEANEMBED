@@ -356,7 +356,7 @@ def skill_metrics(request):
     return JsonResponse(
         {
             "available": True,
-            "message": "Skill scores computed against independent gridded ARGO observations.",
+            "message": "Skill scores from a trained-model rerun against ARGO float in-situ profiles (see validation block for method).",
             "model_name": model.get("name"),
             "metrics": payload.get("overall"),
             "per_depth": payload.get("per_depth", []),

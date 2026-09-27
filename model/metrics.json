@@ -3,121 +3,123 @@
     "name": "OceanEmbed v2 (CNN + Center Skip)"
   },
   "overall": {
-    "rmse_c": 4.37,
-    "correlation": 0.95,
-    "bias_c": 3.66,
-    "n_profiles": 8
+    "rmse_c": 1.237,
+    "correlation": 0.9914,
+    "bias_c": 0.539,
+    "n_profiles": 6,
+    "n_pairs": 90
   },
   "per_depth": [
     {
       "depth_m": 0,
-      "rmse_c": 0.51,
-      "correlation": 0.99,
-      "bias_c": 0.51,
-      "n": 8
+      "rmse_c": 0.411,
+      "correlation": 0.9558,
+      "bias_c": 0.078,
+      "n": 6
     },
     {
       "depth_m": 5,
-      "rmse_c": 0.59,
-      "correlation": 0.99,
-      "bias_c": 0.59,
-      "n": 8
+      "rmse_c": 0.418,
+      "correlation": 0.9525,
+      "bias_c": 0.092,
+      "n": 6
     },
     {
       "depth_m": 10,
-      "rmse_c": 0.79,
-      "correlation": 0.99,
-      "bias_c": 0.79,
-      "n": 8
+      "rmse_c": 0.428,
+      "correlation": 0.9516,
+      "bias_c": 0.143,
+      "n": 6
     },
     {
       "depth_m": 20,
-      "rmse_c": 1.54,
-      "correlation": 0.99,
-      "bias_c": 1.54,
-      "n": 8
+      "rmse_c": 0.558,
+      "correlation": 0.9403,
+      "bias_c": 0.352,
+      "n": 6
     },
     {
       "depth_m": 30,
-      "rmse_c": 3.11,
-      "correlation": 0.99,
-      "bias_c": 3.11,
-      "n": 8
+      "rmse_c": 0.784,
+      "correlation": 0.8898,
+      "bias_c": 0.593,
+      "n": 6
     },
     {
       "depth_m": 50,
-      "rmse_c": 5.91,
-      "correlation": 0.99,
-      "bias_c": 5.91,
-      "n": 8
+      "rmse_c": 1.048,
+      "correlation": 0.6863,
+      "bias_c": 0.607,
+      "n": 6
     },
     {
       "depth_m": 75,
-      "rmse_c": 8.22,
-      "correlation": 0.99,
-      "bias_c": 8.22,
-      "n": 8
+      "rmse_c": 1.781,
+      "correlation": 0.1774,
+      "bias_c": 1.257,
+      "n": 6
     },
     {
       "depth_m": 100,
-      "rmse_c": 7.59,
-      "correlation": 0.99,
-      "bias_c": 7.59,
-      "n": 8
+      "rmse_c": 1.344,
+      "correlation": 0.0647,
+      "bias_c": 0.475,
+      "n": 6
     },
     {
       "depth_m": 125,
-      "rmse_c": 6.19,
-      "correlation": 0.99,
-      "bias_c": 6.19,
-      "n": 8
+      "rmse_c": 1.239,
+      "correlation": 0.1252,
+      "bias_c": -0.377,
+      "n": 6
     },
     {
       "depth_m": 150,
-      "rmse_c": 5.07,
-      "correlation": 0.99,
-      "bias_c": 5.07,
-      "n": 8
+      "rmse_c": 1.326,
+      "correlation": 0.3466,
+      "bias_c": -0.833,
+      "n": 6
     },
     {
       "depth_m": 200,
-      "rmse_c": 3.9,
-      "correlation": 0.99,
-      "bias_c": 3.9,
-      "n": 8
+      "rmse_c": 0.823,
+      "correlation": 0.6389,
+      "bias_c": -0.45,
+      "n": 6
     },
     {
       "depth_m": 300,
-      "rmse_c": 3.36,
-      "correlation": 0.99,
-      "bias_c": 3.36,
-      "n": 8
+      "rmse_c": 1.164,
+      "correlation": 0.5523,
+      "bias_c": 0.977,
+      "n": 6
     },
     {
       "depth_m": 500,
-      "rmse_c": 3.27,
-      "correlation": 0.99,
-      "bias_c": 3.27,
-      "n": 8
+      "rmse_c": 1.8,
+      "correlation": 0.5863,
+      "bias_c": 1.717,
+      "n": 6
     },
     {
       "depth_m": 700,
-      "rmse_c": 2.93,
-      "correlation": 0.99,
-      "bias_c": 2.93,
-      "n": 8
+      "rmse_c": 2.158,
+      "correlation": 0.4405,
+      "bias_c": 2.067,
+      "n": 6
     },
     {
       "depth_m": 1000,
-      "rmse_c": 1.87,
-      "correlation": 0.99,
-      "bias_c": 1.87,
-      "n": 8
+      "rmse_c": 1.485,
+      "correlation": 0.5454,
+      "bias_c": 1.395,
+      "n": 6
     }
   ],
   "validation": {
-    "dataset": "Model self-consistency check (synthetic NIO profiles)",
-    "period": "2023-06-15 (single timestep snapshot)",
-    "region": "5N-30N, 45E-105E"
+    "dataset": "6 INCOIS/Coriolis ARGO benchmark floats vs trained-model rerun",
+    "period": "float dates span 2024-2025 (per-float date in argo_benchmark_floats.json)",
+    "region": "5N-30N, 45E-105E (North Indian Ocean)",
+    "method": "model/validate_argo.py: each float's surface telemetry through model/infer.py, scored against its in-situ profile; wind_speed_ms applied zonally (no ARGO wind direction)"
   }
 }
