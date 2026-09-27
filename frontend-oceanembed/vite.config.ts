@@ -1,22 +1,33 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
-//     nitro (build-only; default target is cloudflare, overridden to vercel
-//     below), VITE_* env injection, @ path alias,
-//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import react from "@vitejs/plugin-react";
+import { fileURLToPath } from "node:url";
+import { nitro } from "nitro/vite";
+import tsConfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vite";
 
-export default defineConfig({
-  tanstackStart: {
+// Stock TanStack Start + Nitro (Vercel) setup. Dev server: `npm run dev` on port 8080.
+export default defineConfig(({ command }) => ({
+  plugins: [
+    tsConfigPaths(),
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
+    tanstackStart({ server: { entry: "server" } }),
+    // Build-only: bundle the server with Nitro's `vercel` preset (Vercel Functions).
+    ...(command === "build" ? [nitro({ preset: "vercel" })] : []),
+    react(),
+    tailwindcss(),
+  ],
+  css: { transformer: "lightningcss" },
+  resolve: {
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    dedupe: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+    ],
   },
-  // Vercel builds this app with Nitro's `vercel` preset (Vercel Functions).
-  // The wrapper defaults to the cloudflare target, so this override is required —
-  // do NOT add a manual `nitro()` vite plugin, it would duplicate the bundled one.
-  nitro: {
-    preset: "vercel",
-  },
-});
+  server: { port: 8080, host: true, strictPort: true },
+}));

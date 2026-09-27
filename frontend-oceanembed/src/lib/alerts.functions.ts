@@ -1,6 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+const BACKEND_BASE_URL = process.env["BACKEND_BASE_URL"] ?? "http://localhost:8000";
+
+const authedFetch = (path: string, accessToken: string, init?: RequestInit) =>
+  fetch(`${BACKEND_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      ...(init?.headers ?? {}),
+    },
+    signal: AbortSignal.timeout(60000),
+  });
 
 /**
  * Calamity / disaster watch for the North Indian Ocean.
@@ -127,25 +139,40 @@ function evaluate(r: Reading): Trigger[] {
   return out;
 }
 
-/** Read the signed-in user's alert preferences. */
-export const getMyAlertSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await context.supabase
-      .from("alert_subscriptions")
-      .select("email, region, lat, lon, enabled")
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    return data ?? null;
+export interface DjangoSubscription {
+  email: string;
+  region: string;
+  lat: number;
+  lon: number;
+  enabled: boolean;
+}
+
+export interface DjangoAlert {
+  id: number;
+  severity: string;
+  headline: string;
+  detail: string;
+  created_at: string;
+}
+
+/** Read the signed-in user's alert preferences from Django (Gmail-backed). */
+export const getMyAlertSubscription = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) =>
+    z.object({ accessToken: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data }): Promise<DjangoSubscription | null> => {
+    const res = await authedFetch("/api/alerts/mine/", data.accessToken);
+    if (!res.ok) throw new Error("Could not load your alert settings.");
+    const body = (await res.json()) as { subscription: DjangoSubscription | null };
+    return body.subscription;
   });
 
-/** Opt in / update where the user wants to be warned about. */
+/** Opt in / update where the user wants to be warned about (Django + Gmail). */
 export const saveAlertSubscription = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
-        email: z.string().email(),
+        accessToken: z.string().min(1),
         region: z.string().min(2).max(80),
         lat: z.number().min(-90).max(90),
         lon: z.number().min(-180).max(180),
@@ -153,33 +180,30 @@ export const saveAlertSubscription = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("alert_subscriptions").upsert(
-      {
-        user_id: context.userId,
-        email: data.email,
-        region: data.region,
-        lat: data.lat,
-        lon: data.lon,
-        enabled: data.enabled,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" },
-    );
-    if (error) throw new Error("Could not save your alert settings.");
+  .handler(async ({ data }) => {
+    const path = data.enabled ? "/api/alerts/subscribe/" : "/api/alerts/unsubscribe/";
+    const res = await authedFetch(path, data.accessToken, {
+      method: "POST",
+      body: JSON.stringify(
+        data.enabled
+          ? { latitude: data.lat, longitude: data.lon }
+          : { latitude: data.lat, longitude: data.lon },
+      ),
+    });
+    if (!res.ok) throw new Error("Could not save your alert settings.");
     return { ok: true };
   });
 
-/** Recently issued alerts, newest first. */
-export const listAlerts = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await context.supabase
-      .from("disaster_alerts")
-      .select("id, kind, severity, region, lat, lon, headline, detail, metrics, created_at")
-      .order("created_at", { ascending: false })
-      .limit(25);
-    return data ?? [];
+/** Alert mails Django recently sent to the caller, newest first. */
+export const listAlerts = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) =>
+    z.object({ accessToken: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data }): Promise<DjangoAlert[]> => {
+    const res = await authedFetch("/api/alerts/recent/", data.accessToken);
+    if (!res.ok) throw new Error("Could not load alert history.");
+    const body = (await res.json()) as { alerts: DjangoAlert[] };
+    return body.alerts;
   });
 
 /** Live surface snapshot of every watch point (no writes). */
@@ -188,73 +212,24 @@ export const getWatchBoard = createServerFn({ method: "GET" }).handler(async () 
   return readings.map((r) => ({ ...r, triggers: evaluate(r) }));
 });
 
+export interface DisasterScanResult {
+  scanned: number;
+  created: number;
+  recipients: number;
+  newAlerts: { headline: string; region: string; severity: string }[];
+  emailReady: boolean;
+}
+
 /**
- * Screen every watch point, record new alerts and notify opted-in users.
- * Safe to call repeatedly: alerts are unique per kind + region + UTC day.
+ * Screen every watch point with LIVE data and Gmail subscribers via Django.
+ * Deduplicated per user + cell + event per 24h — safe to call repeatedly.
  */
 export const runDisasterScan = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async () => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const readings = await Promise.all(WATCH_POINTS.map(readPoint));
-
-    const rows = readings.flatMap((r) =>
-      evaluate(r).map((t) => ({
-        kind: t.kind,
-        severity: t.severity,
-        region: r.region,
-        lat: r.lat,
-        lon: r.lon,
-        headline: t.headline,
-        detail: t.detail,
-        metrics: {
-          sst: r.sst,
-          wind_speed_ms: r.windSpeed,
-          wave_height_m: r.waveHeight,
-          current_speed_ms: r.currentSpeed,
-        },
-      })),
-    );
-
-    let created = 0;
-    const newAlerts: { headline: string; region: string; severity: string }[] = [];
-
-    for (const row of rows) {
-      const { data, error } = await supabaseAdmin
-        .from("disaster_alerts")
-        .insert(row)
-        .select("id, headline, region, severity")
-        .maybeSingle();
-      // Duplicate for today -> unique violation, quietly skipped.
-      if (!error && data) {
-        created += 1;
-        newAlerts.push({ headline: data.headline, region: data.region, severity: data.severity });
-      }
-    }
-
-    const { count } = await supabaseAdmin
-      .from("alert_subscriptions")
-      .select("user_id", { count: "exact", head: true })
-      .eq("enabled", true);
-
-    const recipients = count ?? 0;
-
-    if (created > 0 && recipients > 0) {
-      // Email delivery is enabled once a verified sender domain is connected.
-      await supabaseAdmin
-        .from("disaster_alerts")
-        .update({ notified_count: recipients })
-        .in(
-          "headline",
-          newAlerts.map((a) => a.headline),
-        );
-    }
-
-    return {
-      scanned: readings.length,
-      created,
-      recipients,
-      newAlerts,
-      emailReady: false as const,
-    };
+  .inputValidator((input: unknown) =>
+    z.object({ accessToken: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data }): Promise<DisasterScanResult> => {
+    const res = await authedFetch("/api/alerts/scan/", data.accessToken, { method: "POST" });
+    if (!res.ok) throw new Error("Scan failed — try again in a moment");
+    return (await res.json()) as DisasterScanResult;
   });

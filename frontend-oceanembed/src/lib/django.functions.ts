@@ -41,6 +41,15 @@ export interface PredictionItem {
   mld_m?: number;
   heat_content_c?: number;
   z20_m?: number;
+  climatology_c?: number;
+  anomaly_c?: number;
+  anomaly_label?: string;
+  anomaly_delta_str?: string;
+  anomaly_badge_color?: "red" | "amber" | "emerald" | "sky" | "indigo" | string;
+  anomaly_severity?: "critical" | "warning" | "normal" | "cool" | "upwelling" | string;
+  anomaly_description?: string;
+  ocean_layer?: string;
+  ocean_zone?: string;
 }
 
 export interface PredictionResponse {
@@ -49,7 +58,67 @@ export interface PredictionResponse {
   location: { latitude: number; longitude: number };
   date: string;
   grid_resolution: string;
+  climatology_baseline?: string;
+  surface_observations?: Record<string, number | undefined>;
+  live_telemetry?: {
+    source?: string;
+    timestamp?: string;
+    latency_ms?: number;
+    is_live?: boolean;
+    error?: string;
+  };
   predictions: PredictionItem[];
+}
+
+export interface ArgoDepthRecord {
+  depth_m: number;
+  model_prediction_c: number;
+  true_argo_reading_c: number;
+  residual_error_c: number;
+  absolute_error_c: number;
+  accuracy_pct: number;
+}
+
+export interface ArgoBenchmarkFloat {
+  float_id: string;
+  platform_type: string;
+  data_centre: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  date: string;
+  cycle_number: number;
+  surface_telemetry: {
+    sst: number;
+    sss: number;
+    sla: number;
+    ugos: number;
+    vgos: number;
+    wind_speed_ms: number;
+  };
+  metrics: {
+    rmse_c: number;
+    bias_c: number;
+    r2: number;
+    depths_evaluated: number;
+  };
+  profile: ArgoDepthRecord[];
+}
+
+export interface ArgoBenchmarkResponse {
+  summary: {
+    title: string;
+    benchmark_region: string;
+    r2_score: number;
+    rmse_c: number;
+    bias_c: number;
+    mae_c: number;
+    total_floats: number;
+    total_profiles_evaluated: number;
+    depth_coverage_m: string;
+    sensor_instrument: string;
+  };
+  floats: ArgoBenchmarkFloat[];
 }
 
 export interface ModelStatus {
@@ -148,3 +217,16 @@ export const getMetrics = createServerFn({ method: "GET" })
     if (!res.ok) throw new Error("Backend unreachable");
     return (await res.json()) as SkillMetrics;
   });
+
+/**
+ * GET /api/argo/floats/ — authentic INCOIS/Coriolis ARGO benchmark floats.
+ */
+export const getArgoBenchmarkFloats = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/argo/floats/`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) throw new Error("Failed to load ARGO benchmark data from backend.");
+    return (await res.json()) as ArgoBenchmarkResponse;
+  });
+

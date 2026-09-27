@@ -25,7 +25,15 @@ const tooltipStyle = {
   labelStyle: { color: "var(--muted-foreground)" },
 };
 
-export function VerticalProfileChart({ levels }: { levels: DepthLevel[] }) {
+export function VerticalProfileChart({
+  levels,
+  predLabel = "Predicted (OceanEmbed)",
+  refLabel = "Reference (Gridded ARGO)",
+}: {
+  levels: DepthLevel[];
+  predLabel?: string;
+  refLabel?: string;
+}) {
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
@@ -34,7 +42,6 @@ export function VerticalProfileChart({ levels }: { levels: DepthLevel[] }) {
           layout="vertical"
           margin={{ top: 8, right: 12, bottom: 18, left: 4 }}
         >
-
           <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
           <XAxis
             type="number"
@@ -53,7 +60,6 @@ export function VerticalProfileChart({ levels }: { levels: DepthLevel[] }) {
             dataKey="depth"
             type="number"
             domain={[0, 1000]}
-
             tick={axis}
             tickLine={false}
             width={44}
@@ -68,7 +74,7 @@ export function VerticalProfileChart({ levels }: { levels: DepthLevel[] }) {
           <Tooltip {...tooltipStyle} />
           <Line
             dataKey="temperature"
-            name="Predicted (OceanEmbed)"
+            name={predLabel}
             stroke="var(--color-chart-2)"
             strokeWidth={2.4}
             isAnimationActive={false}
@@ -76,22 +82,21 @@ export function VerticalProfileChart({ levels }: { levels: DepthLevel[] }) {
           />
           <Line
             dataKey="reference"
-            name="Reference (ARGO)"
+            name={refLabel}
             stroke="var(--color-foreground)"
             strokeWidth={1.6}
             isAnimationActive={false}
             strokeDasharray="5 4"
-            dot={false}
+            dot={{ r: 2, fill: "var(--color-foreground)" }}
           />
         </LineChart>
       </ResponsiveContainer>
       <div className="mt-1 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-2">
-          <span className="h-0.5 w-6 rounded bg-chart-2" /> Predicted (OceanEmbed)
+          <span className="h-0.5 w-6 rounded bg-chart-2" /> {predLabel}
         </span>
         <span className="flex items-center gap-2">
-          <span className="h-0.5 w-6 rounded border-t border-dashed border-foreground" /> Reference
-          (Gridded ARGO)
+          <span className="h-0.5 w-6 rounded border-t border-dashed border-foreground" /> {refLabel}
         </span>
       </div>
     </div>

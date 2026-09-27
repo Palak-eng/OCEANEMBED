@@ -57,6 +57,7 @@ const SEVERITY: Record<string, string> = {
 
 function AlertsPage() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [region, setRegion] = useState<string>(WATCH_POINTS[0]!.region);
   const [enabled, setEnabled] = useState(true);
@@ -70,6 +71,7 @@ function AlertsPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSignedIn(!!data.session);
+      setAccessToken(data.session?.access_token ?? null);
       if (data.session?.user.email) setEmail((e) => e || data.session!.user.email!);
     });
   }, []);
@@ -82,38 +84,48 @@ function AlertsPage() {
 
   const sub = useQuery({
     queryKey: ["alert-sub"],
-    queryFn: () => fetchSub(),
-    enabled: signedIn === true,
+    queryFn: () => fetchSub({ data: { accessToken: accessToken! } }),
+    enabled: signedIn === true && !!accessToken,
   });
 
   const alerts = useQuery({
     queryKey: ["alerts"],
-    queryFn: () => fetchAlerts(),
-    enabled: signedIn === true,
+    queryFn: () => fetchAlerts({ data: { accessToken: accessToken! } }),
+    enabled: signedIn === true && !!accessToken,
   });
 
   useEffect(() => {
-    if (sub.data) {
-      setEmail(sub.data.email);
-      setRegion(sub.data.region);
-      setEnabled(sub.data.enabled);
+    const saved = sub.data;
+    if (saved) {
+      setEmail(saved.email);
+      // Django stores coordinates — snap back to the nearest watch region.
+      const nearest = WATCH_POINTS.reduce((best, w) => {
+        const d = Math.hypot(w.lat - saved.lat, w.lon - saved.lon);
+        const bd = Math.hypot(best.lat - saved.lat, best.lon - saved.lon);
+        return d < bd ? w : best;
+      });
+      setRegion(nearest.region);
+      setEnabled(saved.enabled);
     }
   }, [sub.data]);
 
   const saving = useMutation({
     mutationFn: () => {
       const p = WATCH_POINTS.find((w) => w.region === region) ?? WATCH_POINTS[0]!;
-      return save({ data: { email, region, lat: p.lat, lon: p.lon, enabled } });
+      return save({
+        data: { accessToken: accessToken!, region, lat: p.lat, lon: p.lon, enabled },
+      });
     },
     onSuccess: () => {
       toast.success(enabled ? "You're on the alert list" : "Alerts paused");
       qc.invalidateQueries({ queryKey: ["alert-sub"] });
     },
-    onError: () => toast.error("Could not save your alert settings"),
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : "Could not save your alert settings"),
   });
 
   const scanning = useMutation({
-    mutationFn: () => scan(),
+    mutationFn: () => scan({ data: { accessToken: accessToken! } }),
     onSuccess: (r) => {
       toast.success(
         r.created > 0

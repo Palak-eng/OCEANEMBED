@@ -2,8 +2,9 @@
 
 The frontend signs users in with Supabase (email/OTP/Google) and sends the
 Supabase access token as ``Authorization: Bearer <token>``. This module
-validates the RS256 signature against the project's JWKS and returns the
-user claims. PyJWT is imported lazily so ``manage.py check`` still passes
+validates the signature against the project's JWKS — accepting RS256, ES256
+and EdDSA keys, since newer Supabase projects sign with ES256 — and returns
+the user claims. PyJWT is imported lazily so ``manage.py check`` still passes
 on machines without the optional dependency installed.
 """
 
@@ -71,8 +72,23 @@ def verify_supabase_token(token):
     if jwk is None:
         raise ValueError("Unknown signing key.")
 
+    allowed_algs = {"RS256", "ES256", "EdDSA"}
+    token_alg = str(header.get("alg") or "")
+    jwk_alg = str(jwk.get("alg") or "")
+    algorithm = token_alg if token_alg in allowed_algs else jwk_alg
+    if algorithm not in allowed_algs:
+        kty = str(jwk.get("kty") or "").upper()
+        algorithm = {"RSA": "RS256", "EC": "ES256", "OKP": "EdDSA"}.get(kty, "")
+    if algorithm not in allowed_algs:
+        raise ValueError("Unsupported signing key.")
+
     try:
-        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+        if algorithm == "RS256":
+            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+        elif algorithm == "ES256":
+            public_key = jwt.algorithms.ECAlgorithm.from_jwk(json.dumps(jwk))
+        else:
+            public_key = jwt.algorithms.OKPAlgorithm.from_jwk(json.dumps(jwk))
     except Exception as exc:
         raise ValueError("Unsupported signing key.") from exc
 
@@ -81,7 +97,7 @@ def verify_supabase_token(token):
         return jwt.decode(
             token,
             public_key,
-            algorithms=["RS256"],
+            algorithms=[algorithm],
             audience="authenticated",
             issuer=f"{base}/auth/v1",
             options={"require": ["exp", "iss", "sub"]},

@@ -19,4 +19,13 @@ urlpatterns = [
     path("metrics/", views.skill_metrics, name="skill-metrics"),
     path("datasets/", views.datasets, name="datasets"),
     path("predict/", views.predict_temperature, name="predict-temperature"),
+    path("satellite/live/", views.live_satellite_reading, name="live_satellite"),
+    path("history/", views.history_24h, name="history-24h"),
+    path("alerts/subscribe/", views.subscribe_alerts, name="alerts-subscribe"),
+    path("alerts/unsubscribe/", views.unsubscribe_alerts, name="alerts-unsubscribe"),
+    path("alerts/mine/", views.my_alert_subscription, name="alerts-mine"),
+    path("alerts/recent/", views.recent_alerts, name="alerts-recent"),
+    path("alerts/scan/", views.scan_alerts_now, name="alerts-scan"),
+    path("argo/floats/", views.argo_benchmark_floats, name="argo-benchmark-floats"),
+    path("argo/floats/<str:float_id>/", views.argo_benchmark_floats, name="argo-benchmark-float-detail"),
 ]

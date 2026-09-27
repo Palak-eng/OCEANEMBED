@@ -3,6 +3,8 @@ import math
 import secrets
 from datetime import date
 
+
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -13,10 +15,14 @@ from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods
 
+from . import alerts
 from . import model_service
+from . import live_satellite  # <--- ADD THIS LINE
+from . import climatology
+from .models import AlertLog, AlertSubscription
 from .supabase_auth import supabase_jwt_required
 
 STANDARD_DEPTHS = [0, 5, 10, 20, 30, 50, 75, 100, 125, 150, 200, 300, 500, 700, 1000]
@@ -42,7 +48,7 @@ def api_index(request):
     return JsonResponse(
         {
             "service": "OceanDepth AI Backend",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "endpoints": {
                 "health": "/api/health/",
                 "csrf": "/api/auth/csrf/",
@@ -58,6 +64,14 @@ def api_index(request):
                 "metrics": "/api/metrics/",
                 "datasets": "/api/datasets/",
                 "predict": "/api/predict/",
+                "satellite_live": "/api/satellite/live/",
+                "history_24h": "/api/history/",
+                "alerts_subscribe": "/api/alerts/subscribe/",
+                "alerts_unsubscribe": "/api/alerts/unsubscribe/",
+                "alerts_mine": "/api/alerts/mine/",
+                "alerts_recent": "/api/alerts/recent/",
+                "alerts_scan": "/api/alerts/scan/",
+                "argo_floats": "/api/argo/floats/",
             },
         }
     )
@@ -368,6 +382,7 @@ def datasets(request):
     )
 
 
+@csrf_exempt
 @require_http_methods(["POST", "OPTIONS"])
 @supabase_jwt_required
 def predict_temperature(request):
@@ -385,7 +400,19 @@ def predict_temperature(request):
     latitude = float(payload["latitude"])
     longitude = float(payload["longitude"])
     requested_depths = payload.get("depths") or STANDARD_DEPTHS
-    surface = payload.get("surface_observations") or {}
+    user_surface = payload.get("surface_observations") or {}
+
+    # Check if live satellite mode is requested or if surface is empty
+    use_live = payload.get("live", True)
+    live_telemetry = None
+
+    if use_live and not user_surface:
+        # Auto-fetch today's real-time satellite data
+        live_result = live_satellite.fetch_live_surface(latitude, longitude)
+        surface = live_result["surface"]
+        live_telemetry = live_result["telemetry"]
+    else:
+        surface = user_surface
 
     result = model_service.run_inference(
         latitude=latitude,
@@ -395,6 +422,40 @@ def predict_temperature(request):
         surface=surface,
     )
 
+    # Enrich with authentic NOAA WOA 30-year Climatology Normal & Thermal Anomaly
+    clim_map = climatology.get_climatology_profile(
+        lat=latitude,
+        lon=longitude,
+        date_iso=payload.get("date"),
+        depths=requested_depths,
+    )
+    enriched_predictions = []
+    for item in result["predictions"]:
+        d = int(item["depth_m"])
+        t_pred = float(item["temperature_c"])
+        t_clim = clim_map.get(d, round(max(4.0, 28.0 - 0.022 * d), 2))
+        delta_t = round(t_pred - t_clim, 2)
+        diag = climatology.classify_thermal_anomaly(delta_t)
+        layer = climatology.get_ocean_layer(d)
+
+        entry = dict(item)
+        entry["climatology_c"] = t_clim
+        entry["anomaly_c"] = delta_t
+        entry["anomaly_label"] = diag["label"]
+        entry["anomaly_delta_str"] = diag["delta_str"]
+        entry["anomaly_badge_color"] = diag["badge_color"]
+        entry["anomaly_severity"] = diag["severity"]
+        entry["anomaly_description"] = diag["description"]
+        entry["ocean_layer"] = layer["name"]
+        entry["ocean_zone"] = layer["zone"]
+        enriched_predictions.append(entry)
+
+    # Calamity watch: Gmail the logged-in user if their cell is critical.
+    # Never breaks the response — alerts.py swallows its own errors.
+    calamity = alerts.maybe_alert_requesting_user(
+        request, latitude, longitude, enriched_predictions, payload.get("date")
+    )
+
     return JsonResponse(
         {
             "mode": result["mode"],
@@ -402,9 +463,179 @@ def predict_temperature(request):
             "location": {"latitude": latitude, "longitude": longitude},
             "date": payload.get("date"),
             "grid_resolution": "0.25 x 0.25 degree",
-            "predictions": result["predictions"],
+            "climatology_baseline": "NOAA World Ocean Atlas (WOA) 30-Year Monthly Climatology",
+            "surface_observations": surface,      # <--- Shows today's live SST & winds
+            "live_telemetry": live_telemetry,      # <--- Latency, satellite source, timestamp
+            "predictions": enriched_predictions,
+            "calamity_alert": (
+                {
+                    "event_type": calamity["event_type"],
+                    "anomaly_c": calamity["anomaly_c"],
+                    "depth_m": calamity["depth_m"],
+                    "emailed": bool(calamity.get("alert_sent")),
+                } if calamity else None
+            ),
         }
     )
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
+@supabase_jwt_required
+def subscribe_alerts(request):
+    """Opt a logged-in scientist into Gmail calamity alerts for a location."""
+    if request.method == "OPTIONS":
+        return JsonResponse({}, status=204)
+
+    payload, error_response = _json_payload(request)
+    if error_response:
+        return error_response
+
+    email = alerts.requester_email(request)
+    if not email:
+        return JsonResponse({"error": "Could not determine your account email."}, status=401)
+
+    try:
+        latitude = float(payload.get("latitude", 15.0))
+        longitude = float(payload.get("longitude", 65.0))
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "latitude and longitude must be numbers."}, status=400)
+    if not 5.0 <= latitude <= 30.0:
+        return JsonResponse({"error": "latitude must be between 5 and 30."}, status=400)
+    if not 45.0 <= longitude <= 105.0:
+        return JsonResponse({"error": "longitude must be between 45 and 105."}, status=400)
+
+    try:
+        radius = float(payload.get("radius_deg", 2.0))
+    except (TypeError, ValueError):
+        radius = 2.0
+    radius = min(max(radius, 0.25), 10.0)
+
+    sub, _ = AlertSubscription.objects.update_or_create(
+        email=email.strip().lower(),
+        latitude=round(latitude, 2),
+        longitude=round(longitude, 2),
+        defaults={
+            "radius_deg": radius,
+            "alert_heatwave": bool(payload.get("alert_heatwave", True)),
+            "alert_upwelling": bool(payload.get("alert_upwelling", False)),
+            "active": True,
+        },
+    )
+    return JsonResponse({
+        "detail": f"Calamity alerts ON for {email} near {latitude:.1f}N, {longitude:.1f}E.",
+        "gmail_configured": alerts.email_configured(),
+        "subscription": {
+            "email": sub.email,
+            "latitude": sub.latitude,
+            "longitude": sub.longitude,
+            "radius_deg": sub.radius_deg,
+            "alert_heatwave": sub.alert_heatwave,
+            "alert_upwelling": sub.alert_upwelling,
+        },
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
+@supabase_jwt_required
+def unsubscribe_alerts(request):
+    """Opt out of Gmail calamity alerts (one cell or everything)."""
+    if request.method == "OPTIONS":
+        return JsonResponse({}, status=204)
+
+    payload, error_response = _json_payload(request)
+    if error_response:
+        return error_response
+
+    email = alerts.requester_email(request)
+    if not email:
+        return JsonResponse({"error": "Could not determine your account email."}, status=401)
+
+    qs = AlertSubscription.objects.filter(email__iexact=email.strip().lower(), active=True)
+    if payload.get("latitude") is not None and payload.get("longitude") is not None:
+        try:
+            qs = qs.filter(
+                latitude__gte=float(payload["latitude"]) - 0.01,
+                latitude__lte=float(payload["latitude"]) + 0.01,
+                longitude__gte=float(payload["longitude"]) - 0.01,
+                longitude__lte=float(payload["longitude"]) + 0.01,
+            )
+        except (TypeError, ValueError):
+            return JsonResponse({"error": "latitude and longitude must be numbers."}, status=400)
+    count = qs.update(active=False)
+    return JsonResponse({"detail": f"Unsubscribed {count} alert subscription(s).", "active": False})
+
+
+@require_http_methods(["GET", "OPTIONS"])
+@supabase_jwt_required
+def my_alert_subscription(request):
+    """Return the caller's active alert subscription, if any."""
+    if request.method == "OPTIONS":
+        return JsonResponse({}, status=204)
+
+    email = alerts.requester_email(request)
+    if not email:
+        return JsonResponse({"error": "Could not determine your account email."}, status=401)
+
+    sub = AlertSubscription.objects.filter(email__iexact=email.strip().lower(), active=True).first()
+    if sub is None:
+        return JsonResponse({"subscription": None})
+    return JsonResponse({
+        "subscription": {
+            "email": sub.email,
+            "region": f"{sub.latitude:.1f}N, {sub.longitude:.1f}E",
+            "lat": sub.latitude,
+            "lon": sub.longitude,
+            "enabled": sub.active,
+        }
+    })
+
+
+@require_http_methods(["GET", "OPTIONS"])
+@supabase_jwt_required
+def recent_alerts(request):
+    """Alert mails recently sent to the caller (newest first, max 25)."""
+    if request.method == "OPTIONS":
+        return JsonResponse({}, status=204)
+
+    email = alerts.requester_email(request)
+    if not email:
+        return JsonResponse({"error": "Could not determine your account email."}, status=401)
+
+    rows = (
+        AlertLog.objects.filter(email__iexact=email.strip().lower())
+        .order_by("-sent_at")[:25]
+    )
+    return JsonResponse({
+        "alerts": [
+            {
+                "id": row.id,
+                "severity": "warning" if row.event_type == "heatwave" else "watch",
+                "headline": (
+                    f"{'Marine heatwave' if row.event_type == 'heatwave' else row.event_type.replace('_', ' ')} "
+                    f"alert ({row.max_anomaly_c:+.2f} C)"
+                ),
+                "detail": f"Detected near {row.latitude:.1f}N, {row.longitude:.1f}E.",
+                "created_at": row.sent_at.isoformat(),
+            }
+            for row in rows
+        ]
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
+@supabase_jwt_required
+def scan_alerts_now(request):
+    """Run the fast live surface scan now and mail subscribers (see alerts.fast_surface_scan)."""
+    if request.method == "OPTIONS":
+        return JsonResponse({}, status=204)
+
+    try:
+        return JsonResponse(alerts.fast_surface_scan())
+    except Exception as exc:
+        return JsonResponse({"error": f"Scan failed: {exc}"}, status=502)
 
 
 def _validate_prediction_payload(payload):
@@ -530,3 +761,60 @@ def _as_float(value, fallback):
         return float(value)
     except (TypeError, ValueError):
         return fallback
+
+@require_GET
+def live_satellite_reading(request):
+    """Returns today's live satellite readings for a coordinate without running full ML."""
+    try:
+        lat = float(request.GET.get("latitude", 15.0))
+        lon = float(request.GET.get("longitude", 65.0))
+    except ValueError:
+        return JsonResponse({"error": "latitude and longitude must be numbers."}, status=400)
+
+    result = live_satellite.fetch_live_surface(lat, lon)
+    return JsonResponse({
+        "location": {"latitude": lat, "longitude": lon},
+        "surface": result["surface"],
+        "telemetry": result["telemetry"]
+    })
+
+
+@require_GET
+def history_24h(request):
+    """Returns the last 24h of hourly live surface data for scientist CSV export."""
+    try:
+        lat = float(request.GET.get("latitude", 15.0))
+        lon = float(request.GET.get("longitude", 65.0))
+    except ValueError:
+        return JsonResponse({"error": "latitude and longitude must be numbers."}, status=400)
+    if not 5.0 <= lat <= 30.0:
+        return JsonResponse({"error": "latitude must be between 5 and 30."}, status=400)
+    if not 45.0 <= lon <= 105.0:
+        return JsonResponse({"error": "longitude must be between 45 and 105."}, status=400)
+
+    return JsonResponse(live_satellite.fetch_24h_history(lat, lon))
+
+
+@require_GET
+def argo_benchmark_floats(request, float_id=None):
+    """
+    Returns curated authentic INCOIS/Coriolis ARGO benchmark floats for model validation.
+    Used by Tab 2 (ARGO Benchmark / Accuracy Mode).
+    """
+    benchmark_file = model_service.BASE_DIR / "model" / "argo_benchmark_floats.json"
+    if not benchmark_file.is_file():
+        return JsonResponse({"error": "ARGO benchmark dataset not found."}, status=404)
+
+    try:
+        with open(benchmark_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        return JsonResponse({"error": f"Failed to load ARGO benchmarks: {str(e)}"}, status=500)
+
+    if float_id:
+        target = next((fl for fl in data.get("floats", []) if str(fl.get("float_id")) == str(float_id)), None)
+        if not target:
+            return JsonResponse({"error": f"Float #{float_id} not found."}, status=404)
+        return JsonResponse({"summary": data.get("summary", {}), "float": target})
+
+    return JsonResponse(data)

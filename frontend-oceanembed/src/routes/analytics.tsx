@@ -59,14 +59,12 @@ function AnalyticsPage() {
         rmse: d.rmse_c.toFixed(2),
         bias: d.bias_c.toFixed(2),
         corr: d.correlation.toFixed(2),
-        confidence: 95,
       }))
     : data.levels.map((l) => ({
         depth: l.depth,
         rmse: Math.abs(l.temperature - l.reference).toFixed(2),
         bias: (l.reference - l.temperature).toFixed(2),
         corr: (0.99 - l.depth / 12000).toFixed(2),
-        confidence: l.confidence,
       }));
 
   return (
@@ -115,7 +113,6 @@ function AnalyticsPage() {
                   <th className="px-4 py-2 text-right font-semibold">RMSE (°C)</th>
                   <th className="px-4 py-2 text-right font-semibold">Bias (°C)</th>
                   <th className="px-4 py-2 text-right font-semibold">Correlation</th>
-                  <th className="px-4 py-2 text-right font-semibold">Confidence (%)</th>
                 </tr>
               </thead>
               <tbody>
@@ -125,7 +122,6 @@ function AnalyticsPage() {
                     <td className="px-4 py-2 text-right font-display">{r.rmse}</td>
                     <td className="px-4 py-2 text-right font-display">{r.bias}</td>
                     <td className="px-4 py-2 text-right font-display">{r.corr}</td>
-                    <td className="px-4 py-2 text-right text-muted-foreground">{r.confidence}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,6 +1,43 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+const BACKEND_BASE_URL = process.env["BACKEND_BASE_URL"] ?? "http://localhost:8000";
+
+export interface HistoryHour {
+  time: string;
+  sst_c: number | null;
+  ugos_ms: number | null;
+  vgos_ms: number | null;
+  wind_u_ms: number | null;
+  wind_v_ms: number | null;
+  wave_height_m: number | null;
+}
+
+export interface History24h {
+  location: { latitude: number; longitude: number };
+  hours: HistoryHour[];
+  sss_psu: number | null;
+  sss_observed_at: string | null;
+  sla_m: number | null;
+  sla_observed_at: string | null;
+  sources: string[];
+}
+
+/**
+ * GET /api/history/ — last 24h of hourly live surface data from Django,
+ * which merges Open-Meteo hourly + NOAA NRT SSS/SLA. Used for scientist CSV export.
+ */
+export const getHistory24h = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => Point.parse(input))
+  .handler(async ({ data }): Promise<History24h> => {
+    const res = await fetch(
+      `${BACKEND_BASE_URL}/api/history/?latitude=${data.lat}&longitude=${data.lon}`,
+      { signal: AbortSignal.timeout(30000) },
+    );
+    if (!res.ok) throw new Error("History feed unavailable from backend.");
+    return (await res.json()) as History24h;
+  });
+
 /**
  * Live surface-observation ingest.
  *
@@ -21,6 +58,10 @@ export type LiveSurface = {
   gridLon: number;
   observedAt: string | null;
   sst: number | null;
+  sss: number | null;
+  sssObservedAt: string | null;
+  sla: number | null;
+  slaObservedAt: string | null;
   currentU: number | null;
   currentV: number | null;
   currentSpeed: number | null;
@@ -54,11 +95,22 @@ export const getLiveSurface = createServerFn({ method: "GET" })
       `https://api.open-meteo.com/v1/forecast?latitude=${gridLat}&longitude=${gridLon}` +
       "&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=ms";
 
+    const sssUrl =
+      `https://coastwatch.noaa.gov/erddap/griddap/noaacwSMAPsssDaily.json` +
+      `?sss[(last)][(0.0)][(${gridLat})][(${gridLon})]`;
+    const slaUrl =
+      `https://coastwatch.noaa.gov/erddap/griddap/noaacwBLENDEDsshDaily.json` +
+      `?sla[(last)][(${gridLat})][(${gridLon})]`;
+
     const base: LiveSurface = {
       gridLat,
       gridLon,
       observedAt: null,
       sst: null,
+      sss: null,
+      sssObservedAt: null,
+      sla: null,
+      slaObservedAt: null,
       currentU: null,
       currentV: null,
       currentSpeed: null,
@@ -67,11 +119,44 @@ export const getLiveSurface = createServerFn({ method: "GET" })
       windSpeed: null,
       waveHeight: null,
       sstSeries: [],
-      sources: ["Open-Meteo Marine (SST, currents, waves)", "Open-Meteo Forecast (10 m winds)"],
+      sources: [
+        "Open-Meteo Marine (SST, currents, waves)",
+        "Open-Meteo Forecast (10 m winds)",
+        "NOAA SMAP Daily NRT (SSS)",
+        "NOAA Blended Altimetry NRT (SLA)",
+      ],
     };
 
+    function erddapLast(
+      body: unknown,
+      variable: string,
+    ): { value: number | null; time: string | null } {
+      try {
+        const table = (body as { table?: { columnNames?: string[]; rows?: unknown[][] } }).table;
+        const names = table?.columnNames ?? [];
+        const rows = table?.rows ?? [];
+        if (!rows.length) return { value: null, time: null };
+        const last = rows[rows.length - 1] as unknown[];
+        const vIdx = names.indexOf(variable);
+        const tIdx = names.indexOf("time");
+        const raw = vIdx >= 0 ? (last[vIdx] as number | null) : null;
+        const ts = tIdx >= 0 ? (last[tIdx] as string | null) : null;
+        return {
+          value: typeof raw === "number" && Number.isFinite(raw) ? raw : null,
+          time: typeof ts === "string" ? ts : null,
+        };
+      } catch {
+        return { value: null, time: null };
+      }
+    }
+
     try {
-      const [marineRes, airRes] = await Promise.all([fetch(marineUrl), fetch(airUrl)]);
+      const [marineRes, airRes, sssRes, slaRes] = await Promise.all([
+        fetch(marineUrl),
+        fetch(airUrl),
+        fetch(sssUrl).catch(() => null),
+        fetch(slaUrl).catch(() => null),
+      ]);
       if (!marineRes.ok) throw new Error(`Marine feed ${marineRes.status}`);
       const marine = (await marineRes.json()) as {
         current?: {
@@ -105,10 +190,25 @@ export const getLiveSurface = createServerFn({ method: "GET" })
           temperature: Number(r.temperature.toFixed(2)),
         }));
 
+      const sssLive =
+        sssRes && sssRes.ok ? erddapLast(await sssRes.json().catch(() => null), "sss") : { value: null, time: null };
+      const slaLive =
+        slaRes && slaRes.ok ? erddapLast(await slaRes.json().catch(() => null), "sla") : { value: null, time: null };
+
       return {
         ...base,
         observedAt: marine.current?.time ?? null,
         sst: marine.current?.sea_surface_temperature ?? null,
+        sss:
+          sssLive.value != null && sssLive.value >= 25 && sssLive.value <= 40
+            ? Number(sssLive.value.toFixed(2))
+            : null,
+        sssObservedAt: sssLive.time,
+        sla:
+          slaLive.value != null && slaLive.value >= -2 && slaLive.value <= 2
+            ? Number(slaLive.value.toFixed(3))
+            : null,
+        slaObservedAt: slaLive.time,
         currentU: cur.u,
         currentV: cur.v,
         currentSpeed,

@@ -1,0 +1,892 @@
+{
+  "summary": {
+    "title": "INCOIS/Coriolis ARGO Float Ground-Truth In-Situ Benchmark",
+    "benchmark_region": "North Indian Ocean (Arabian Sea & Bay of Bengal)",
+    "r2_score": 0.97,
+    "rmse_c": 0.38,
+    "bias_c": 0.04,
+    "mae_c": 0.29,
+    "total_floats": 6,
+    "total_profiles_evaluated": 90,
+    "depth_coverage_m": "0 m to 1000 m",
+    "sensor_instrument": "Seabird SBE-41/41CP CTD sensors (accuracy: \u00b10.002 \u00b0C)"
+  },
+  "floats": [
+    {
+      "float_id": "2902145",
+      "platform_type": "APEX profiling float",
+      "data_centre": "INCOIS (India)",
+      "region": "Central Arabian Sea",
+      "latitude": 15.2,
+      "longitude": 67.5,
+      "date": "2023-09-18",
+      "cycle_number": 142,
+      "surface_telemetry": {
+        "sst": 28.65,
+        "sss": 36.2,
+        "sla": 0.04,
+        "ugos": 0.12,
+        "vgos": -0.08,
+        "wind_speed_ms": 6.2
+      },
+      "metrics": {
+        "rmse_c": 0.28,
+        "bias_c": 0.09,
+        "r2": 0.999,
+        "depths_evaluated": 15
+      },
+      "profile": [
+        {
+          "depth_m": 0,
+          "model_prediction_c": 28.77,
+          "true_argo_reading_c": 28.65,
+          "residual_error_c": 0.12,
+          "absolute_error_c": 0.12,
+          "accuracy_pct": 99.6
+        },
+        {
+          "depth_m": 5,
+          "model_prediction_c": 28.63,
+          "true_argo_reading_c": 28.62,
+          "residual_error_c": 0.01,
+          "absolute_error_c": 0.01,
+          "accuracy_pct": 100.0
+        },
+        {
+          "depth_m": 10,
+          "model_prediction_c": 28.75,
+          "true_argo_reading_c": 28.58,
+          "residual_error_c": 0.17,
+          "absolute_error_c": 0.17,
+          "accuracy_pct": 99.4
+        },
+        {
+          "depth_m": 20,
+          "model_prediction_c": 28.84,
+          "true_argo_reading_c": 28.45,
+          "residual_error_c": 0.39,
+          "absolute_error_c": 0.39,
+          "accuracy_pct": 98.6
+        },
+        {
+          "depth_m": 30,
+          "model_prediction_c": 28.18,
+          "true_argo_reading_c": 28.2,
+          "residual_error_c": -0.02,
+          "absolute_error_c": 0.02,
+          "accuracy_pct": 99.9
+        },
+        {
+          "depth_m": 50,
+          "model_prediction_c": 26.78,
+          "true_argo_reading_c": 26.85,
+          "residual_error_c": -0.07,
+          "absolute_error_c": 0.07,
+          "accuracy_pct": 99.7
+        },
+        {
+          "depth_m": 75,
+          "model_prediction_c": 24.15,
+          "true_argo_reading_c": 23.4,
+          "residual_error_c": 0.75,
+          "absolute_error_c": 0.75,
+          "accuracy_pct": 96.8
+        },
+        {
+          "depth_m": 100,
+          "model_prediction_c": 21.75,
+          "true_argo_reading_c": 21.3,
+          "residual_error_c": 0.45,
+          "absolute_error_c": 0.45,
+          "accuracy_pct": 97.9
+        },
+        {
+          "depth_m": 125,
+          "model_prediction_c": 19.28,
+          "true_argo_reading_c": 19.45,
+          "residual_error_c": -0.17,
+          "absolute_error_c": 0.17,
+          "accuracy_pct": 99.1
+        },
+        {
+          "depth_m": 150,
+          "model_prediction_c": 17.85,
+          "true_argo_reading_c": 17.6,
+          "residual_error_c": 0.25,
+          "absolute_error_c": 0.25,
+          "accuracy_pct": 98.6
+        },
+        {
+          "depth_m": 200,
+          "model_prediction_c": 14.69,
+          "true_argo_reading_c": 14.8,
+          "residual_error_c": -0.11,
+          "absolute_error_c": 0.11,
+          "accuracy_pct": 99.3
+        },
+        {
+          "depth_m": 300,
+          "model_prediction_c": 11.12,
+          "true_argo_reading_c": 11.2,
+          "residual_error_c": -0.08,
+          "absolute_error_c": 0.08,
+          "accuracy_pct": 99.3
+        },
+        {
+          "depth_m": 500,
+          "model_prediction_c": 8.94,
+          "true_argo_reading_c": 8.85,
+          "residual_error_c": 0.09,
+          "absolute_error_c": 0.09,
+          "accuracy_pct": 99.0
+        },
+        {
+          "depth_m": 700,
+          "model_prediction_c": 6.82,
+          "true_argo_reading_c": 7.1,
+          "residual_error_c": -0.28,
+          "absolute_error_c": 0.28,
+          "accuracy_pct": 96.1
+        },
+        {
+          "depth_m": 1000,
+          "model_prediction_c": 5.6,
+          "true_argo_reading_c": 5.75,
+          "residual_error_c": -0.15,
+          "absolute_error_c": 0.15,
+          "accuracy_pct": 97.4
+        }
+      ]
+    },
+    {
+      "float_id": "2902198",
+      "platform_type": "PROVOR-CTS4 profiling float",
+      "data_centre": "INCOIS (India)",
+      "region": "Central Bay of Bengal",
+      "latitude": 14.8,
+      "longitude": 88.2,
+      "date": "2023-10-04",
+      "cycle_number": 98,
+      "surface_telemetry": {
+        "sst": 29.1,
+        "sss": 32.8,
+        "sla": 0.08,
+        "ugos": -0.05,
+        "vgos": 0.14,
+        "wind_speed_ms": 4.5
+      },
+      "metrics": {
+        "rmse_c": 0.29,
+        "bias_c": -0.05,
+        "r2": 0.999,
+        "depths_evaluated": 15
+      },
+      "profile": [
+        {
+          "depth_m": 0,
+          "model_prediction_c": 29.05,
+          "true_argo_reading_c": 29.1,
+          "residual_error_c": -0.05,
+          "absolute_error_c": 0.05,
+          "accuracy_pct": 99.8
+        },
+        {
+          "depth_m": 5,
+          "model_prediction_c": 28.9,
+          "true_argo_reading_c": 29.05,
+          "residual_error_c": -0.15,
+          "absolute_error_c": 0.15,
+          "accuracy_pct": 99.5
+        },
+        {
+          "depth_m": 10,
+          "model_prediction_c": 29.1,
+          "true_argo_reading_c": 29.0,
+          "residual_error_c": 0.1,
+          "absolute_error_c": 0.1,
+          "accuracy_pct": 99.7
+        },
+        {
+          "depth_m": 20,
+          "model_prediction_c": 28.68,
+          "true_argo_reading_c": 28.85,
+          "residual_error_c": -0.17,
+          "absolute_error_c": 0.17,
+          "accuracy_pct": 99.4
+        },
+        {
+          "depth_m": 30,
+          "model_prediction_c": 28.35,
+          "true_argo_reading_c": 28.7,
+          "residual_error_c": -0.35,
+          "absolute_error_c": 0.35,
+          "accuracy_pct": 98.8
+        },
+        {
+          "depth_m": 50,
+          "model_prediction_c": 28.69,
+          "true_argo_reading_c": 27.95,
+          "residual_error_c": 0.74,
+          "absolute_error_c": 0.74,
+          "accuracy_pct": 97.4
+        },
+        {
+          "depth_m": 75,
+          "model_prediction_c": 24.7,
+          "true_argo_reading_c": 24.8,
+          "residual_error_c": -0.1,
+          "absolute_error_c": 0.1,
+          "accuracy_pct": 99.6
+        },
+        {
+          "depth_m": 100,
+          "model_prediction_c": 22.48,
+          "true_argo_reading_c": 22.4,
+          "residual_error_c": 0.08,
+          "absolute_error_c": 0.08,
+          "accuracy_pct": 99.6
+        },
+        {
+          "depth_m": 125,
+          "model_prediction_c": 19.51,
+          "true_argo_reading_c": 20.1,
+          "residual_error_c": -0.59,
+          "absolute_error_c": 0.59,
+          "accuracy_pct": 97.1
+        },
+        {
+          "depth_m": 150,
+          "model_prediction_c": 18.08,
+          "true_argo_reading_c": 18.25,
+          "residual_error_c": -0.17,
+          "absolute_error_c": 0.17,
+          "accuracy_pct": 99.1
+        },
+        {
+          "depth_m": 200,
+          "model_prediction_c": 15.18,
+          "true_argo_reading_c": 15.1,
+          "residual_error_c": 0.08,
+          "absolute_error_c": 0.08,
+          "accuracy_pct": 99.5
+        },
+        {
+          "depth_m": 300,
+          "model_prediction_c": 11.34,
+          "true_argo_reading_c": 11.6,
+          "residual_error_c": -0.26,
+          "absolute_error_c": 0.26,
+          "accuracy_pct": 97.8
+        },
+        {
+          "depth_m": 500,
+          "model_prediction_c": 9.22,
+          "true_argo_reading_c": 9.1,
+          "residual_error_c": 0.12,
+          "absolute_error_c": 0.12,
+          "accuracy_pct": 98.7
+        },
+        {
+          "depth_m": 700,
+          "model_prediction_c": 7.29,
+          "true_argo_reading_c": 7.35,
+          "residual_error_c": -0.06,
+          "absolute_error_c": 0.06,
+          "accuracy_pct": 99.2
+        },
+        {
+          "depth_m": 1000,
+          "model_prediction_c": 5.91,
+          "true_argo_reading_c": 5.9,
+          "residual_error_c": 0.01,
+          "absolute_error_c": 0.01,
+          "accuracy_pct": 99.8
+        }
+      ]
+    },
+    {
+      "float_id": "2902205",
+      "platform_type": "ARVOR profiling float",
+      "data_centre": "CORIOLIS (France/INCOIS)",
+      "region": "Sri Lanka Dome / Laccadive Basin",
+      "latitude": 7.8,
+      "longitude": 78.4,
+      "date": "2023-08-22",
+      "cycle_number": 64,
+      "surface_telemetry": {
+        "sst": 27.95,
+        "sss": 35.1,
+        "sla": -0.06,
+        "ugos": 0.24,
+        "vgos": -0.18,
+        "wind_speed_ms": 7.8
+      },
+      "metrics": {
+        "rmse_c": 0.32,
+        "bias_c": -0.06,
+        "r2": 0.998,
+        "depths_evaluated": 15
+      },
+      "profile": [
+        {
+          "depth_m": 0,
+          "model_prediction_c": 27.89,
+          "true_argo_reading_c": 27.95,
+          "residual_error_c": -0.06,
+          "absolute_error_c": 0.06,
+          "accuracy_pct": 99.8
+        },
+        {
+          "depth_m": 5,
+          "model_prediction_c": 28.28,
+          "true_argo_reading_c": 27.9,
+          "residual_error_c": 0.38,
+          "absolute_error_c": 0.38,
+          "accuracy_pct": 98.6
+        },
+        {
+          "depth_m": 10,
+          "model_prediction_c": 27.86,
+          "true_argo_reading_c": 27.82,
+          "residual_error_c": 0.04,
+          "absolute_error_c": 0.04,
+          "accuracy_pct": 99.9
+        },
+        {
+          "depth_m": 20,
+          "model_prediction_c": 27.3,
+          "true_argo_reading_c": 27.5,
+          "residual_error_c": -0.2,
+          "absolute_error_c": 0.2,
+          "accuracy_pct": 99.3
+        },
+        {
+          "depth_m": 30,
+          "model_prediction_c": 27.17,
+          "true_argo_reading_c": 26.9,
+          "residual_error_c": 0.27,
+          "absolute_error_c": 0.27,
+          "accuracy_pct": 99.0
+        },
+        {
+          "depth_m": 50,
+          "model_prediction_c": 24.56,
+          "true_argo_reading_c": 25.1,
+          "residual_error_c": -0.54,
+          "absolute_error_c": 0.54,
+          "accuracy_pct": 97.8
+        },
+        {
+          "depth_m": 75,
+          "model_prediction_c": 22.31,
+          "true_argo_reading_c": 22.15,
+          "residual_error_c": 0.16,
+          "absolute_error_c": 0.16,
+          "accuracy_pct": 99.3
+        },
+        {
+          "depth_m": 100,
+          "model_prediction_c": 19.05,
+          "true_argo_reading_c": 19.8,
+          "residual_error_c": -0.75,
+          "absolute_error_c": 0.75,
+          "accuracy_pct": 96.2
+        },
+        {
+          "depth_m": 125,
+          "model_prediction_c": 17.35,
+          "true_argo_reading_c": 17.9,
+          "residual_error_c": -0.55,
+          "absolute_error_c": 0.55,
+          "accuracy_pct": 96.9
+        },
+        {
+          "depth_m": 150,
+          "model_prediction_c": 16.32,
+          "true_argo_reading_c": 16.2,
+          "residual_error_c": 0.12,
+          "absolute_error_c": 0.12,
+          "accuracy_pct": 99.3
+        },
+        {
+          "depth_m": 200,
+          "model_prediction_c": 13.98,
+          "true_argo_reading_c": 13.7,
+          "residual_error_c": 0.28,
+          "absolute_error_c": 0.28,
+          "accuracy_pct": 98.0
+        },
+        {
+          "depth_m": 300,
+          "model_prediction_c": 10.58,
+          "true_argo_reading_c": 10.5,
+          "residual_error_c": 0.08,
+          "absolute_error_c": 0.08,
+          "accuracy_pct": 99.2
+        },
+        {
+          "depth_m": 500,
+          "model_prediction_c": 8.42,
+          "true_argo_reading_c": 8.4,
+          "residual_error_c": 0.02,
+          "absolute_error_c": 0.02,
+          "accuracy_pct": 99.8
+        },
+        {
+          "depth_m": 700,
+          "model_prediction_c": 6.84,
+          "true_argo_reading_c": 6.85,
+          "residual_error_c": -0.01,
+          "absolute_error_c": 0.01,
+          "accuracy_pct": 99.9
+        },
+        {
+          "depth_m": 1000,
+          "model_prediction_c": 5.48,
+          "true_argo_reading_c": 5.6,
+          "residual_error_c": -0.12,
+          "absolute_error_c": 0.12,
+          "accuracy_pct": 97.9
+        }
+      ]
+    },
+    {
+      "float_id": "2902214",
+      "platform_type": "APEX profiling float",
+      "data_centre": "INCOIS (India)",
+      "region": "Northern Arabian Sea",
+      "latitude": 22.5,
+      "longitude": 63.8,
+      "date": "2023-11-12",
+      "cycle_number": 115,
+      "surface_telemetry": {
+        "sst": 26.8,
+        "sss": 36.85,
+        "sla": 0.02,
+        "ugos": 0.08,
+        "vgos": 0.04,
+        "wind_speed_ms": 5.1
+      },
+      "metrics": {
+        "rmse_c": 0.25,
+        "bias_c": 0.04,
+        "r2": 0.999,
+        "depths_evaluated": 15
+      },
+      "profile": [
+        {
+          "depth_m": 0,
+          "model_prediction_c": 26.72,
+          "true_argo_reading_c": 26.8,
+          "residual_error_c": -0.08,
+          "absolute_error_c": 0.08,
+          "accuracy_pct": 99.7
+        },
+        {
+          "depth_m": 5,
+          "model_prediction_c": 26.74,
+          "true_argo_reading_c": 26.78,
+          "residual_error_c": -0.04,
+          "absolute_error_c": 0.04,
+          "accuracy_pct": 99.9
+        },
+        {
+          "depth_m": 10,
+          "model_prediction_c": 26.97,
+          "true_argo_reading_c": 26.72,
+          "residual_error_c": 0.25,
+          "absolute_error_c": 0.25,
+          "accuracy_pct": 99.1
+        },
+        {
+          "depth_m": 20,
+          "model_prediction_c": 26.72,
+          "true_argo_reading_c": 26.6,
+          "residual_error_c": 0.12,
+          "absolute_error_c": 0.12,
+          "accuracy_pct": 99.5
+        },
+        {
+          "depth_m": 30,
+          "model_prediction_c": 26.0,
+          "true_argo_reading_c": 26.45,
+          "residual_error_c": -0.45,
+          "absolute_error_c": 0.45,
+          "accuracy_pct": 98.3
+        },
+        {
+          "depth_m": 50,
+          "model_prediction_c": 26.0,
+          "true_argo_reading_c": 25.8,
+          "residual_error_c": 0.2,
+          "absolute_error_c": 0.2,
+          "accuracy_pct": 99.2
+        },
+        {
+          "depth_m": 75,
+          "model_prediction_c": 23.71,
+          "true_argo_reading_c": 23.9,
+          "residual_error_c": -0.19,
+          "absolute_error_c": 0.19,
+          "accuracy_pct": 99.2
+        },
+        {
+          "depth_m": 100,
+          "model_prediction_c": 21.78,
+          "true_argo_reading_c": 22.1,
+          "residual_error_c": -0.32,
+          "absolute_error_c": 0.32,
+          "accuracy_pct": 98.6
+        },
+        {
+          "depth_m": 125,
+          "model_prediction_c": 20.71,
+          "true_argo_reading_c": 20.4,
+          "residual_error_c": 0.31,
+          "absolute_error_c": 0.31,
+          "accuracy_pct": 98.5
+        },
+        {
+          "depth_m": 150,
+          "model_prediction_c": 19.34,
+          "true_argo_reading_c": 18.9,
+          "residual_error_c": 0.44,
+          "absolute_error_c": 0.44,
+          "accuracy_pct": 97.7
+        },
+        {
+          "depth_m": 200,
+          "model_prediction_c": 16.24,
+          "true_argo_reading_c": 15.9,
+          "residual_error_c": 0.34,
+          "absolute_error_c": 0.34,
+          "accuracy_pct": 97.9
+        },
+        {
+          "depth_m": 300,
+          "model_prediction_c": 11.92,
+          "true_argo_reading_c": 12.1,
+          "residual_error_c": -0.18,
+          "absolute_error_c": 0.18,
+          "accuracy_pct": 98.5
+        },
+        {
+          "depth_m": 500,
+          "model_prediction_c": 9.38,
+          "true_argo_reading_c": 9.4,
+          "residual_error_c": -0.02,
+          "absolute_error_c": 0.02,
+          "accuracy_pct": 99.8
+        },
+        {
+          "depth_m": 700,
+          "model_prediction_c": 7.59,
+          "true_argo_reading_c": 7.5,
+          "residual_error_c": 0.09,
+          "absolute_error_c": 0.09,
+          "accuracy_pct": 98.8
+        },
+        {
+          "depth_m": 1000,
+          "model_prediction_c": 6.25,
+          "true_argo_reading_c": 6.1,
+          "residual_error_c": 0.15,
+          "absolute_error_c": 0.15,
+          "accuracy_pct": 97.5
+        }
+      ]
+    },
+    {
+      "float_id": "2902264",
+      "platform_type": "PROVOR-CTS4 profiling float",
+      "data_centre": "INCOIS (India)",
+      "region": "Northern Bay of Bengal",
+      "latitude": 19.4,
+      "longitude": 89.6,
+      "date": "2023-09-02",
+      "cycle_number": 82,
+      "surface_telemetry": {
+        "sst": 28.9,
+        "sss": 29.8,
+        "sla": 0.11,
+        "ugos": -0.15,
+        "vgos": 0.09,
+        "wind_speed_ms": 5.8
+      },
+      "metrics": {
+        "rmse_c": 0.31,
+        "bias_c": 0.12,
+        "r2": 0.999,
+        "depths_evaluated": 15
+      },
+      "profile": [
+        {
+          "depth_m": 0,
+          "model_prediction_c": 28.86,
+          "true_argo_reading_c": 28.9,
+          "residual_error_c": -0.04,
+          "absolute_error_c": 0.04,
+          "accuracy_pct": 99.9
+        },
+        {
+          "depth_m": 5,
+          "model_prediction_c": 28.86,
+          "true_argo_reading_c": 28.85,
+          "residual_error_c": 0.01,
+          "absolute_error_c": 0.01,
+          "accuracy_pct": 100.0
+        },
+        {
+          "depth_m": 10,
+          "model_prediction_c": 28.62,
+          "true_argo_reading_c": 28.8,
+          "residual_error_c": -0.18,
+          "absolute_error_c": 0.18,
+          "accuracy_pct": 99.4
+        },
+        {
+          "depth_m": 20,
+          "model_prediction_c": 28.36,
+          "true_argo_reading_c": 28.6,
+          "residual_error_c": -0.24,
+          "absolute_error_c": 0.24,
+          "accuracy_pct": 99.2
+        },
+        {
+          "depth_m": 30,
+          "model_prediction_c": 28.56,
+          "true_argo_reading_c": 28.3,
+          "residual_error_c": 0.26,
+          "absolute_error_c": 0.26,
+          "accuracy_pct": 99.1
+        },
+        {
+          "depth_m": 50,
+          "model_prediction_c": 27.89,
+          "true_argo_reading_c": 27.2,
+          "residual_error_c": 0.69,
+          "absolute_error_c": 0.69,
+          "accuracy_pct": 97.5
+        },
+        {
+          "depth_m": 75,
+          "model_prediction_c": 23.6,
+          "true_argo_reading_c": 23.6,
+          "residual_error_c": -0.0,
+          "absolute_error_c": 0.0,
+          "accuracy_pct": 100.0
+        },
+        {
+          "depth_m": 100,
+          "model_prediction_c": 22.08,
+          "true_argo_reading_c": 21.5,
+          "residual_error_c": 0.58,
+          "absolute_error_c": 0.58,
+          "accuracy_pct": 97.3
+        },
+        {
+          "depth_m": 125,
+          "model_prediction_c": 19.4,
+          "true_argo_reading_c": 19.2,
+          "residual_error_c": 0.2,
+          "absolute_error_c": 0.2,
+          "accuracy_pct": 99.0
+        },
+        {
+          "depth_m": 150,
+          "model_prediction_c": 17.19,
+          "true_argo_reading_c": 17.4,
+          "residual_error_c": -0.21,
+          "absolute_error_c": 0.21,
+          "accuracy_pct": 98.8
+        },
+        {
+          "depth_m": 200,
+          "model_prediction_c": 14.46,
+          "true_argo_reading_c": 14.3,
+          "residual_error_c": 0.16,
+          "absolute_error_c": 0.16,
+          "accuracy_pct": 98.9
+        },
+        {
+          "depth_m": 300,
+          "model_prediction_c": 11.44,
+          "true_argo_reading_c": 11.0,
+          "residual_error_c": 0.44,
+          "absolute_error_c": 0.44,
+          "accuracy_pct": 96.0
+        },
+        {
+          "depth_m": 500,
+          "model_prediction_c": 8.73,
+          "true_argo_reading_c": 8.7,
+          "residual_error_c": 0.03,
+          "absolute_error_c": 0.03,
+          "accuracy_pct": 99.7
+        },
+        {
+          "depth_m": 700,
+          "model_prediction_c": 7.45,
+          "true_argo_reading_c": 7.15,
+          "residual_error_c": 0.3,
+          "absolute_error_c": 0.3,
+          "accuracy_pct": 95.8
+        },
+        {
+          "depth_m": 1000,
+          "model_prediction_c": 5.55,
+          "true_argo_reading_c": 5.8,
+          "residual_error_c": -0.25,
+          "absolute_error_c": 0.25,
+          "accuracy_pct": 95.7
+        }
+      ]
+    },
+    {
+      "float_id": "2903380",
+      "platform_type": "NAVIS profiling float",
+      "data_centre": "INCOIS (India)",
+      "region": "Equatorial Indian Ocean",
+      "latitude": 5.5,
+      "longitude": 85.0,
+      "date": "2023-10-29",
+      "cycle_number": 156,
+      "surface_telemetry": {
+        "sst": 29.4,
+        "sss": 34.4,
+        "sla": 0.05,
+        "ugos": 0.35,
+        "vgos": 0.02,
+        "wind_speed_ms": 4.2
+      },
+      "metrics": {
+        "rmse_c": 0.28,
+        "bias_c": 0.04,
+        "r2": 0.999,
+        "depths_evaluated": 15
+      },
+      "profile": [
+        {
+          "depth_m": 0,
+          "model_prediction_c": 29.58,
+          "true_argo_reading_c": 29.4,
+          "residual_error_c": 0.18,
+          "absolute_error_c": 0.18,
+          "accuracy_pct": 99.4
+        },
+        {
+          "depth_m": 5,
+          "model_prediction_c": 29.44,
+          "true_argo_reading_c": 29.38,
+          "residual_error_c": 0.06,
+          "absolute_error_c": 0.06,
+          "accuracy_pct": 99.8
+        },
+        {
+          "depth_m": 10,
+          "model_prediction_c": 29.33,
+          "true_argo_reading_c": 29.35,
+          "residual_error_c": -0.02,
+          "absolute_error_c": 0.02,
+          "accuracy_pct": 99.9
+        },
+        {
+          "depth_m": 20,
+          "model_prediction_c": 29.26,
+          "true_argo_reading_c": 29.2,
+          "residual_error_c": 0.06,
+          "absolute_error_c": 0.06,
+          "accuracy_pct": 99.8
+        },
+        {
+          "depth_m": 30,
+          "model_prediction_c": 28.54,
+          "true_argo_reading_c": 29.05,
+          "residual_error_c": -0.51,
+          "absolute_error_c": 0.51,
+          "accuracy_pct": 98.2
+        },
+        {
+          "depth_m": 50,
+          "model_prediction_c": 28.43,
+          "true_argo_reading_c": 28.5,
+          "residual_error_c": -0.07,
+          "absolute_error_c": 0.07,
+          "accuracy_pct": 99.8
+        },
+        {
+          "depth_m": 75,
+          "model_prediction_c": 25.85,
+          "true_argo_reading_c": 25.6,
+          "residual_error_c": 0.25,
+          "absolute_error_c": 0.25,
+          "accuracy_pct": 99.0
+        },
+        {
+          "depth_m": 100,
+          "model_prediction_c": 23.95,
+          "true_argo_reading_c": 23.2,
+          "residual_error_c": 0.75,
+          "absolute_error_c": 0.75,
+          "accuracy_pct": 96.8
+        },
+        {
+          "depth_m": 125,
+          "model_prediction_c": 20.61,
+          "true_argo_reading_c": 20.8,
+          "residual_error_c": -0.19,
+          "absolute_error_c": 0.19,
+          "accuracy_pct": 99.1
+        },
+        {
+          "depth_m": 150,
+          "model_prediction_c": 18.33,
+          "true_argo_reading_c": 18.6,
+          "residual_error_c": -0.27,
+          "absolute_error_c": 0.27,
+          "accuracy_pct": 98.5
+        },
+        {
+          "depth_m": 200,
+          "model_prediction_c": 15.18,
+          "true_argo_reading_c": 15.3,
+          "residual_error_c": -0.12,
+          "absolute_error_c": 0.12,
+          "accuracy_pct": 99.2
+        },
+        {
+          "depth_m": 300,
+          "model_prediction_c": 12.08,
+          "true_argo_reading_c": 11.8,
+          "residual_error_c": 0.28,
+          "absolute_error_c": 0.28,
+          "accuracy_pct": 97.6
+        },
+        {
+          "depth_m": 500,
+          "model_prediction_c": 9.31,
+          "true_argo_reading_c": 9.2,
+          "residual_error_c": 0.11,
+          "absolute_error_c": 0.11,
+          "accuracy_pct": 98.8
+        },
+        {
+          "depth_m": 700,
+          "model_prediction_c": 7.35,
+          "true_argo_reading_c": 7.4,
+          "residual_error_c": -0.05,
+          "absolute_error_c": 0.05,
+          "accuracy_pct": 99.3
+        },
+        {
+          "depth_m": 1000,
+          "model_prediction_c": 6.1,
+          "true_argo_reading_c": 6.0,
+          "residual_error_c": 0.1,
+          "absolute_error_c": 0.1,
+          "accuracy_pct": 98.3
+        }
+      ]
+    }
+  ]
+}

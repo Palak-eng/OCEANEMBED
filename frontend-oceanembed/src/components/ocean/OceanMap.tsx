@@ -1,21 +1,34 @@
-import { Crosshair, Minus, Plus } from "lucide-react";
+import { Crosshair, Minus, Plus, Navigation } from "lucide-react";
 import { useRef, useState } from "react";
 import heatmap from "@/assets/ocean-heatmap.jpg";
 import { HeatmapCanvas } from "@/components/ocean/HeatmapCanvas";
 import { REGION, reconstruct } from "@/lib/ocean-model";
 import { cn } from "@/lib/utils";
+import type { ArgoBenchmarkFloat } from "@/lib/django.functions";
 
 type Props = {
   lat: number;
   lon: number;
   depth: number;
   onPick: (lat: number, lon: number) => void;
-  className?: string;
+  className?: string | undefined;
+  argoFloats?: ArgoBenchmarkFloat[] | undefined;
+  selectedFloatId?: string | undefined;
+  onSelectFloat?: ((fl: ArgoBenchmarkFloat) => void) | undefined;
 };
 
 const SCALE_TICKS = [32, 28, 24, 20, 16, 12, 8, 4];
 
-export function OceanMap({ lat, lon, depth, onPick, className }: Props) {
+export function OceanMap({
+  lat,
+  lon,
+  depth,
+  onPick,
+  className,
+  argoFloats,
+  selectedFloatId,
+  onSelectFloat,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
 
@@ -77,6 +90,52 @@ export function OceanMap({ lat, lon, depth, onPick, className }: Props) {
             </button>
           ))}
         </div>
+
+        {/* ARGO Float Ground-Truth Pins */}
+        {argoFloats?.map((fl) => {
+          const flX = ((fl.longitude - REGION.lonMin) / (REGION.lonMax - REGION.lonMin)) * 100;
+          const flY = ((REGION.latMax - fl.latitude) / (REGION.latMax - REGION.latMin)) * 100;
+          const isSelected = fl.float_id === selectedFloatId;
+
+          return (
+            <div
+              key={fl.float_id}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectFloat?.(fl);
+              }}
+              className="group absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer z-20"
+              style={{ left: `${flX}%`, top: `${flY}%` }}
+              title={`ARGO Float #${fl.float_id} (${fl.region})`}
+            >
+              <div className="relative flex items-center justify-center">
+                {isSelected && (
+                  <span className="absolute size-8 animate-ping rounded-full bg-amber-400/40" />
+                )}
+                <span
+                  className={cn(
+                    "flex size-6 items-center justify-center rounded-full border shadow-lg transition-transform hover:scale-125",
+                    isSelected
+                      ? "border-amber-300 bg-amber-500 text-black shadow-amber-500/50"
+                      : "border-cyan-300 bg-cyan-600/90 text-white shadow-cyan-500/40"
+                  )}
+                >
+                  <Navigation className="size-3.5 rotate-45" />
+                </span>
+                <span
+                  className={cn(
+                    "absolute left-7 top-1/2 -translate-y-1/2 whitespace-nowrap rounded px-1.5 py-0.5 text-[0.65rem] font-bold shadow backdrop-blur transition-opacity",
+                    isSelected
+                      ? "bg-amber-500/90 text-black opacity-100"
+                      : "bg-black/75 text-cyan-200 opacity-80 group-hover:opacity-100"
+                  )}
+                >
+                  #{fl.float_id}
+                </span>
+              </div>
+            </div>
+          );
+        })}
 
         <div
           className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"

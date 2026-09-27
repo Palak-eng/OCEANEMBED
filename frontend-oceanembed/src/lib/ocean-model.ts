@@ -30,7 +30,23 @@ export type DepthLevel = {
   temperature: number;
   reference: number;
   confidence: number;
+  /** Absolute error vs ARGO ground truth in °C — present only in benchmark mode. */
+  residual?: number | undefined;
+  /** Honest skill grade from absolute error — present only in benchmark mode. */
+  skill?: string | undefined;
 };
+
+/**
+ * Grade a prediction against ARGO truth by ABSOLUTE error, not by
+ * relative percent (which flatters warm shallow water: 0.5 °C error at
+ * 28 °C reads as "98%" but is huge by ARGO sensor standards of ±0.002 °C).
+ */
+export function skillFor(residualAbs: number): string {
+  if (residualAbs <= 0.2) return "Excellent";
+  if (residualAbs <= 0.5) return "Good";
+  if (residualAbs <= 1.0) return "Moderate";
+  return "Poor";
+}
 
 export type Reconstruction = {
   lat: number;
