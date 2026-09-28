@@ -1,0 +1,21 @@
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oceanembed-backend
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend-oceanembed
+      dockerfile: Dockerfile
+    container_name: oceanembed-frontend
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

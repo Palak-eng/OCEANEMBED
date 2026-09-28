@@ -13,7 +13,7 @@ export default defineConfig(({ command }) => ({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     tanstackStart({ server: { entry: "server" } }),
     // Build-only: bundle the server with Nitro's `vercel` preset (Vercel Functions).
-    ...(command === "build" ? [nitro({ preset: "vercel" })] : []),
+    ...(command === "build" ? [nitro({ preset: "node-server" })] : []),
     react(),
     tailwindcss(),
   ],
